@@ -30,7 +30,7 @@ Examples
 
     get = (obj, key) {
       accessor = key.split('.')
-      for i=0; i<accessor.length; i++ {
+      for i in accessor {
         if !obj {return ''}
         obj = obj[accessor[i]]
       }
