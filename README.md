@@ -5,14 +5,21 @@ Thurston is a programming language.
 Examples
 --------
     x = 1
-    a = (b + c) / 2
+    y = 3
+    a = (x + y) / 2
+    z = (x, y) {return x+y}
+    n = z(a, y) // n is now equal to 5
+    list = [
+      'bunnies', 
+      'kittens', 
+      'puppies',
+    ]
     dict = {
-      art: "power",
+      art: 'power',
       money: (love) {
         return love / 2
-      }
+      },
     }
-    z = (x, y) {return x+y}
     d = () {
       console.log('In function d')
     }
