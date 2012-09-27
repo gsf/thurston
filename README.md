@@ -4,28 +4,36 @@ Thurston is a programming language.
 
 Examples
 --------
-    x = 1
-    y = 3
-    a = (x + y) / 2
-    z = (x, y) {return x+y}
-    n = z(a, y) // n is now equal to 5
-    list = [
+    x: 1
+    y: 3
+    a: (x + y) / 2
+    z: (x, y) {return x+y}
+    n: z(a, y)
+    q: n = 5  // q is true
+    
+    anArray: [
       'bunnies', 
       'kittens', 
       'puppies',
     ]
-    dict = {
+    aString: ''
+    for cuteThings, index in anArray {
+      aString.push(index)
+      aString.push(cuteThings)
+    }  // now aString is '0bunnies1kittens2puppies' 
+
+    anObject: {
       art: 'power',
       money: (love) {
         return love / 2
       },
     }
-    d = () {
-      console.log('In function d')
+    aFunction: () {
+      console.log('In aFunction')
     }
 
 
-    http = require('http')
+    http: require('http')
 
     http.createServer((request, response) {
       response.writeHead(200, {'Content-Type': 'text/plain'})
@@ -35,11 +43,11 @@ Examples
     console.log('Server running at http://127.0.0.1:8124/')
 
 
-    get = (obj, key) {
-      accessor = key.split('.')
+    get: (obj, key) {
+      accessor: key.split('.')
       for i in accessor {
         if !obj {return ''}
-        obj = obj[accessor[i]]
+        obj: obj[accessor[i]]
       }
       return obj || ''
     }
