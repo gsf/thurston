@@ -17,7 +17,7 @@ Examples
       'puppies',
     ]
     aString: ''
-    for cuteThings, index in anArray {
+    for index, cuteThings in anArray {
       aString.push(index)
       aString.push(cuteThings)
     }  // now aString is '0bunnies1kittens2puppies' 
