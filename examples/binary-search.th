@@ -1,0 +1,23 @@
+// Beautiful Code, Chapter 6.
+// The implementation of binary search that is tested.
+
+// Return the index of an element in a sorted list. (or -1, if not present)
+index: (list, target) {
+  low: 0
+  high: list.length
+  while low < high {
+    mid: (low + high) >> 1
+    val: list[mid]
+    if val = target {ret mid}
+    if val < target {
+      low: mid + 1
+    } else {
+      high: mid
+    }
+  }
+  ret -1
+}
+
+console.log(2 = index([10, 20, 30, 40, 50], 30))
+console.log(4 = index([-97, 35, 67, 88, 1200], 1200))
+console.log(0 = index([0, 45, 70], 0))

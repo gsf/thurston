@@ -1,0 +1,19 @@
+// Comparison to self, see
+// http://selflanguage.org/_static/tutorial/Language/ObjectsAndSlots/ExamplesOfSlots.html
+
+account: {
+  balance: 100
+  deposit: (amount) {
+    balance: balance + amount
+  }
+  withdraw: (amount) {
+    newBalance: balance - amount
+    balance: newBalance > 0 ? newBalance : 0
+  }
+}
+
+console.log(account.balance = 100) // true
+account.deposit(20)
+console.log(account.balance = 120) // true
+account.withdraw(200)
+console.log(account.balance = 0) // true
