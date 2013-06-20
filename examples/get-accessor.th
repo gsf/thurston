@@ -1,8 +1,8 @@
 get: (obj, key){
   accessor: key.split('.')
   for i in accessor {
-    if !obj {ret ''}
+    if !obj {return ''}
     obj: obj[accessor[i]]
   }
-  ret obj || ''
+  return obj || ''
 }

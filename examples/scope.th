@@ -4,7 +4,7 @@ jin: (){
   blam: 'black'
   bloop: 9
   (){bloop: 12}() // IIFE
-  ret bloop
+  return bloop
 }
 
 console.log(jin()) // 12

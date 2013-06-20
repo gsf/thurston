@@ -4,9 +4,9 @@ var jin = function jin() {
   var bloop;
   blam = 'black';
   bloop = 9;
-  (function() {
+  (function () {
     bloop = 12;
-  }())
+  }());
   return bloop;
 };
 

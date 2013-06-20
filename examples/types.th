@@ -1,7 +1,7 @@
 x: 1
 y: 3
 a: (x + y) / 2
-z: (x, y){ret x+y}
+z: (x, y){return x+y}
 n: z(a, y)
 q: n = 5  // q is true
 
@@ -21,7 +21,7 @@ for index, cuteThings in anArray {
 anObject: {
   art: 'power',
   money: (love){
-    ret love / 2
+    return love / 2
   },
 }
 

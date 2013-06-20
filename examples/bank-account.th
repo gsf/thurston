@@ -3,10 +3,10 @@
 
 account: {
   balance: 100
-  deposit: (amount) {
+  deposit: (amount){
     balance: balance + amount
   }
-  withdraw: (amount) {
+  withdraw: (amount){
     newBalance: balance - amount
     balance: newBalance > 0 ? newBalance : 0
   }
