@@ -1,11 +1,12 @@
 blam: 'pink'
 
 jin: (){
-  blam: 'black'
   bloop: 9
+  blam: 'black'
   (){bloop: 12}() // IIFE
   return bloop
 }
 
+console.log(blam) // 'pink'
 console.log(jin()) // 12
 console.log(blam) // 'black'

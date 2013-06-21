@@ -6,9 +6,9 @@ n: z(a, y)
 q: n = 5  // q is true
 
 anArray: [
-  'bunnies', 
-  'kittens', 
-  'puppies',
+  'bunnies' 
+  'kittens' 
+  'puppies'
 ]
 
 aString: ''
@@ -19,10 +19,11 @@ for index, cuteThings in anArray {
 }  // now aString is '0bunnies1kittens2puppies' 
 
 anObject: {
-  art: 'power',
+  art: 'power'
   money: (love){
     return love / 2
-  },
+  }
+  truth: [1 2 3]
 }
 
 aFunction: (){
