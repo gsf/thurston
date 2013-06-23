@@ -1,6 +1,8 @@
 // Comparison to self, see
 // http://selflanguage.org/_static/tutorial/Language/ObjectsAndSlots/ExamplesOfSlots.html
 
+assert: require('assert')
+
 account: {
   balance: 100
   deposit: (amount){
@@ -12,8 +14,8 @@ account: {
   }
 }
 
-console.log(account.balance = 100) // true
+assert(account.balance = 100)
 account.deposit(20)
-console.log(account.balance = 120) // true
+assert(account.balance = 120)
 account.withdraw(200)
-console.log(account.balance = 0) // true
+assert(account.balance = 0)
