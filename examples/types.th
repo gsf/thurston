@@ -26,6 +26,8 @@ anObject: {
   truth: [1 2 3]
 }
 
-aFunction: (){
+anObject.truth: [1 2 'passion']
+
+aFunction: {
   console.log('In aFunction')
 }

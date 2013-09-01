@@ -1,15 +1,17 @@
 var blam = 'pink';
 
 var jin = function jin () {
-  var bloop;
-  bloop = 9;
-  blam = 'black';
+  blam = jin.blam;
   (function () {
-    bloop = 12;
+    jin.bloop = 12;
   }());
-  return bloop;
+  return jin.bloop;
 };
 
+jin.bloop = 9;
+jin.blam = 'black';
+
 console.log(blam);
+console.log(jin.bloop);
 console.log(jin());
 console.log(blam);
