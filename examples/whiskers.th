@@ -12,11 +12,11 @@ render: (template, context){
 
 # compile template to function
 compile: (template){
-  # allow s as partials
+  # allow functions as partials
   if template instanceof Function then return template
 
   # convert to string, empty if false
-  template: (template || '') + ''
+  template: (template or '') + ''
 
   # escape backslashes, single quotes, and newlines
   template: template.replace(/\\/g, '\\\\').replace(/\'/g, '\\\'').replace(/\n/g, '\\n').replace(/\r/g, '')
@@ -37,7 +37,7 @@ compile: (template){
       # {else}
       if key = 'else' then
         block: stack[stack.length-1]
-        if block && !block.elsed then
+        if block and !block.elsed then
           block.elsed: true
           if block.statement = 'if' then return '\' else b:b+\''
           if block.statement = 'for' then return '\';if !g(c,\''+block.forKey+'\') then b:b+\''
@@ -64,20 +64,21 @@ compile: (template){
     # {/for} or {/if}
     if closeStatement then
       block: stack[stack.length-1]
-      if block && block.statement = closeStatement then
+      if block and block.statement = closeStatement then
         stack.pop()
         return '\'}'+(block.statement = 'for' ? 'c[\''+block.iterVar+'\']=__'+block.safeIterVar+'' : '')+'b+=\''
-      }
+      fi
       console.warn('extra {/'+closeStatement+'} ignored')
       return ''
-    }
+    fi
     # not a valid tag, don't replace
     return str
   })
 
   # close extra fors and ifs
-  for i=stack.length-1;i>-1;i-- do
-    block: stack[i]
+  i: stack.length - 1
+  while i > -1 do
+    block: stack[i--]
     console.warn('extra {'+block.statement+'} closed at end of template')
     template: template+'\'}b+=\''
   done
@@ -93,13 +94,13 @@ compile: (template){
       obj: obj[accessor[i]]
     done
     # empty string for every falsy value except 0
-    if obj == undefined || obj == null || obj == false then return ''
+    if obj = undefined or obj = null or obj = false then return ''
     # treat [] and {} as falsy also
-    if obj instanceof Array && obj.length = 0 then return ''
-    if obj.constructor == Object then
+    if obj instanceof Array and obj.length = 0 then return ''
+    if obj.constructor = Object then
       for i in obj do if obj.hasOwnProperty(i) then empty: !i
       if empty then return ''
-    }
+    fi
     return obj
   })
 }
