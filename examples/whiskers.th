@@ -39,8 +39,8 @@ compile: (template){
         block: stack[stack.length-1]
         if block and !block.elsed then
           block.elsed: true
-          if block.statement = 'if' then return '\' else b:b+\''
-          if block.statement = 'for' then return '\';if !g(c,\''+block.forKey+'\') then b:b+\''
+          if block.statement = 'if' then return '\'}else{b+=\'';
+          if block.statement = 'for' then return '\'}if(!g(c,\''+block.forKey+'\')){b+=\'';
         fi
         console.warn('extra {else} ignored')
         return ''
@@ -54,19 +54,19 @@ compile: (template){
     if forKey then
       safeIterVar: iterVar.replace('-', '__')
       stack.push({statement:'for', forKey:forKey, iterVar:iterVar, safeIterVar:safeIterVar})
-      return '\'__'+safeIterVar+':g(c,\''+iterVar+'\')'+safeIterVar+'A:g(c,\''+forKey+'\');for '+safeIterVar+'I in '+safeIterVar+'A do c[\''+iterVar+'\']:'+safeIterVar+'A['+safeIterVar+'I]b:b+\''
+      return '\';var __'+safeIterVar+'=g(c,\''+iterVar+'\');var '+safeIterVar+'A=g(c,\''+forKey+'\');for(var '+safeIterVar+'I=0;'+safeIterVar+'I<'+safeIterVar+'A.length;'+safeIterVar+'I++){c[\''+iterVar+'\']='+safeIterVar+'A['+safeIterVar+'I];b+=\'';
     fi
     # {if foo} or {if not foo}
     if ifKey then
       stack.push({statement:'if'})
-      return '\';if '+(if ifNot then '!' else '')+'g(c,\''+ifKey+'\') then b:b+\''
+      return '\';if('+(if ifNot then '!' else '')+'g(c,\''+ifKey+'\')){b+=\'';
     fi
     # {/for} or {/if}
     if closeStatement then
       block: stack[stack.length-1]
       if block and block.statement = closeStatement then
         stack.pop()
-        return '\'}'+(block.statement = 'for' ? 'c[\''+block.iterVar+'\']=__'+block.safeIterVar+'' : '')+'b+=\''
+        return '\'}'+(if block.statement = 'for' then 'c[\''+block.iterVar+'\']=__'+block.safeIterVar+';' else '')+'b+=\'';
       fi
       console.warn('extra {/'+closeStatement+'} ignored')
       return ''
@@ -84,7 +84,7 @@ compile: (template){
   done
 
   # c is context, b is buffer
-  fn: new Function('r', 'g', 'return (c){b;\''+template+'\'return b}')
+  fn: new Function('g', 'r', 'return function(c){var b=\''+template+'\';return b}');
   return fn(render, (obj, key){
     # get value with dot notation, e.g. get(obj, 'key.for.something')
     accessor: key.split('.'), empty: true
