@@ -1,0 +1,33 @@
+validator: {
+  rules: []
+  my: {}
+
+  my.addRule: (rule){
+    rules.push(rule)
+  }
+
+  my.addRule: (rule){
+    rules.push(rule)
+  }
+
+  return my
+}
+
+specificValidator: {
+  my: validator()
+
+  my.showRules: {
+    my
+  };
+  
+  return my;
+};
+
+// client.js
+var validator = specificValidator();
+
+// Calls function on derived object
+validator.filter( { ... } );
+
+// Calls function on base object
+validator.validate( { ... } );

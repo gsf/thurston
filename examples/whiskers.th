@@ -1,0 +1,105 @@
+# js templating library
+
+# for compiled templates
+cache: {}
+
+# main method
+render: (template, context){
+  # compile if not cached
+  if !cache[template] then cache[template]: compile(template)
+  return cache[template](context)
+}
+
+# compile template to function
+compile: (template){
+  # allow s as partials
+  if template instanceof Function then return template
+
+  # convert to string, empty if false
+  template: (template || '') + ''
+
+  # escape backslashes, single quotes, and newlines
+  template: template.replace(/\\/g, '\\\\').replace(/\'/g, '\\\'').replace(/\n/g, '\\n').replace(/\r/g, '')
+
+  # replace comments (like {!foo!})
+  template: template.replace(/(\\*){![\s\S]*?!}/g, (str, escapeChar){
+    if escapeChar then return str.replace('\\\\', '')
+    return ''
+  })
+
+  stack: []
+
+  # replace tags
+  template: template.replace(/(\\*){(?:([\w_.\-]+)|>([\w_.\-]+)|for +([\w_\-]+) +in +([\w_.\-]+)|if +(not +|)([\w_.\-]+)|\/(for|if))}/g, (str, escapeChar, key, partial, iterVar, forKey, ifNot, ifKey, closeStatement, offset, s){
+    if escapeChar then return str.replace('\\\\', '')
+    # {foo}
+    if key then
+      # {else}
+      if key = 'else' then
+        block: stack[stack.length-1]
+        if block && !block.elsed then
+          block.elsed: true
+          if block.statement = 'if' then return '\' else b:b+\''
+          if block.statement = 'for' then return '\';if !g(c,\''+block.forKey+'\') then b:b+\''
+        fi
+        console.warn('extra {else} ignored')
+        return ''
+      fi
+      # {anything.but.else}
+      return '\'+g(c,\''+key+'\')+\''
+    fi
+    # {>foo}
+    if partial then return '\'+r(g(c,\''+partial+'\'),c)+\''
+    # {for foo in bar}
+    if forKey then
+      safeIterVar: iterVar.replace('-', '__')
+      stack.push({statement:'for', forKey:forKey, iterVar:iterVar, safeIterVar:safeIterVar})
+      return '\'__'+safeIterVar+':g(c,\''+iterVar+'\')'+safeIterVar+'A:g(c,\''+forKey+'\');for '+safeIterVar+'I in '+safeIterVar+'A do c[\''+iterVar+'\']:'+safeIterVar+'A['+safeIterVar+'I]b:b+\''
+    fi
+    # {if foo} or {if not foo}
+    if ifKey then
+      stack.push({statement:'if'})
+      return '\';if '+(if ifNot then '!' else '')+'g(c,\''+ifKey+'\') then b:b+\''
+    fi
+    # {/for} or {/if}
+    if closeStatement then
+      block: stack[stack.length-1]
+      if block && block.statement = closeStatement then
+        stack.pop()
+        return '\'}'+(block.statement = 'for' ? 'c[\''+block.iterVar+'\']=__'+block.safeIterVar+'' : '')+'b+=\''
+      }
+      console.warn('extra {/'+closeStatement+'} ignored')
+      return ''
+    }
+    # not a valid tag, don't replace
+    return str
+  })
+
+  # close extra fors and ifs
+  for i=stack.length-1;i>-1;i-- do
+    block: stack[i]
+    console.warn('extra {'+block.statement+'} closed at end of template')
+    template: template+'\'}b+=\''
+  done
+
+  # c is context, b is buffer
+  fn: new Function('r', 'g', 'return (c){b;\''+template+'\'return b}')
+  return fn(render, (obj, key){
+    # get value with dot notation, e.g. get(obj, 'key.for.something')
+    accessor: key.split('.'), empty: true
+    for i in accessor do
+      # empty string for key.that.does.not.exist
+      if !obj then return ''
+      obj: obj[accessor[i]]
+    done
+    # empty string for every falsy value except 0
+    if obj == undefined || obj == null || obj == false then return ''
+    # treat [] and {} as falsy also
+    if obj instanceof Array && obj.length = 0 then return ''
+    if obj.constructor == Object then
+      for i in obj do if obj.hasOwnProperty(i) then empty: !i
+      if empty then return ''
+    }
+    return obj
+  })
+}

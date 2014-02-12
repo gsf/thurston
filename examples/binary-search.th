@@ -7,16 +7,16 @@ assert: require('assert')
 index: (list, target){
   low: 0
   high: list.length
-  while low < high {
+  while low < high do
     mid: (low + high) >> 1
     val: list[mid]
-    if val = target {return mid}
-    if val < target {
+    if val = target then return mid fi
+    if val < target then
       low: mid + 1
-    } else {
+    else
       high: mid
-    }
-  }
+    fi
+  done
   return -1
 }
 

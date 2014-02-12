@@ -13,10 +13,10 @@ anArray: [
 
 aString: ''
 
-for index, cuteThings in anArray {
+for index, cuteThings in anArray do
   aString.push(index)
   aString.push(cuteThings)
-}  // now aString is '0bunnies1kittens2puppies' 
+done  // now aString is '0bunnies1kittens2puppies' 
 
 anObject: {
   art: 'power'
@@ -31,3 +31,13 @@ anObject.truth: [1 2 'passion']
 aFunction: {
   console.log('In aFunction')
 }
+
+aFunction['a literary method']: {
+  book: "L'Étranger"
+  return book
+}
+
+// n is equal to 5, so "L'Étranger" is logged out
+if n = 5 then
+  console.log(aFunction['a literary method']())
+fi

@@ -1,17 +1,29 @@
 var blam = 'pink';
 
 var jin = function jin () {
-  blam = jin.blam;
+  blam = 'black';
   (function () {
     jin.bloop = 12;
   }());
   return jin.bloop;
 };
-
 jin.bloop = 9;
-jin.blam = 'black';
 
 console.log(blam);
 console.log(jin.bloop);
 console.log(jin());
-console.log(blam);
+
+var squiggle = function squiggle (sss, cb) {
+  console.log(sss);
+  console.log(cb.x);
+  console.log(cb());
+};
+
+squiggle(blam, (function () {
+  var $x2sjd = function () {
+    return $x2sjd.x + ' is ' + $x2sjd.n;
+  };
+  $x2sjd.x = 13;
+  $x2sjd.n = 'a carrot';
+  return $x2sjd;
+}()));
