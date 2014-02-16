@@ -1,46 +1,46 @@
 # js templating library
 
 # for compiled templates
-cache: {}
+cache = {}
 
 # main method
-render: (template, context){
+render = (template, context){
   # compile if not cached
-  if !cache[template] then cache[template]: compile(template)
+  if !cache[template] then cache[template] = compile(template)
   return cache[template](context)
 }
 
 # compile template to function
-compile: (template){
+compile = (template){
   # allow functions as partials
   if template instanceof Function then return template
 
   # convert to string, empty if false
-  template: (template or '') + ''
+  template = (template or '') + ''
 
   # escape backslashes, single quotes, and newlines
-  template: template.replace(/\\/g, '\\\\').replace(/\'/g, '\\\'').replace(/\n/g, '\\n').replace(/\r/g, '')
+  template = template.replace(/\\/g, '\\\\').replace(/\'/g, '\\\'').replace(/\n/g, '\\n').replace(/\r/g, '')
 
   # replace comments (like {!foo!})
-  template: template.replace(/(\\*){![\s\S]*?!}/g, (str, escapeChar){
+  template = template.replace(/(\\*){![\s\S]*?!}/g, (str, escapeChar){
     if escapeChar then return str.replace('\\\\', '')
     return ''
   })
 
-  stack: []
+  stack = []
 
   # replace tags
-  template: template.replace(/(\\*){(?:([\w_.\-]+)|>([\w_.\-]+)|for +([\w_\-]+) +in +([\w_.\-]+)|if +(not +|)([\w_.\-]+)|\/(for|if))}/g, (str, escapeChar, key, partial, iterVar, forKey, ifNot, ifKey, closeStatement, offset, s){
+  template = template.replace(/(\\*){(?:([\w_.\-]+)|>([\w_.\-]+)|for +([\w_\-]+) +in +([\w_.\-]+)|if +(not +|)([\w_.\-]+)|\/(for|if))}/g, (str, escapeChar, key, partial, iterVar, forKey, ifNot, ifKey, closeStatement, offset, s){
     if escapeChar then return str.replace('\\\\', '')
     # {foo}
     if key then
       # {else}
-      if key = 'else' then
-        block: stack[stack.length-1]
+      if key == 'else' then
+        block = stack[stack.length-1]
         if block and !block.elsed then
-          block.elsed: true
-          if block.statement = 'if' then return '\'}else{b+=\'';
-          if block.statement = 'for' then return '\'}if(!g(c,\''+block.forKey+'\')){b+=\'';
+          block.elsed = true
+          if block.statement == 'if' then return '\'}else{b+=\''
+          if block.statement == 'for' then return '\'}if(!g(c,\''+block.forKey+'\')){b+=\''
         fi
         console.warn('extra {else} ignored')
         return ''
@@ -52,21 +52,21 @@ compile: (template){
     if partial then return '\'+r(g(c,\''+partial+'\'),c)+\''
     # {for foo in bar}
     if forKey then
-      safeIterVar: iterVar.replace('-', '__')
+      safeIterVar = iterVar.replace('-', '__')
       stack.push({statement:'for', forKey:forKey, iterVar:iterVar, safeIterVar:safeIterVar})
-      return '\';var __'+safeIterVar+'=g(c,\''+iterVar+'\');var '+safeIterVar+'A=g(c,\''+forKey+'\');for(var '+safeIterVar+'I=0;'+safeIterVar+'I<'+safeIterVar+'A.length;'+safeIterVar+'I++){c[\''+iterVar+'\']='+safeIterVar+'A['+safeIterVar+'I];b+=\'';
+      return '\';var __'+safeIterVar+'=g(c,\''+iterVar+'\');var '+safeIterVar+'A=g(c,\''+forKey+'\');for(var '+safeIterVar+'I=0;'+safeIterVar+'I<'+safeIterVar+'A.length;'+safeIterVar+'I++){c[\''+iterVar+'\']='+safeIterVar+'A['+safeIterVar+'I];b+=\''
     fi
     # {if foo} or {if not foo}
     if ifKey then
       stack.push({statement:'if'})
-      return '\';if('+(if ifNot then '!' else '')+'g(c,\''+ifKey+'\')){b+=\'';
+      return '\';if('+(if ifNot then '!' else '')+'g(c,\''+ifKey+'\')){b+=\''
     fi
     # {/for} or {/if}
     if closeStatement then
-      block: stack[stack.length-1]
-      if block and block.statement = closeStatement then
+      block = stack[stack.length-1]
+      if block and block.statement == closeStatement then
         stack.pop()
-        return '\'}'+(if block.statement = 'for' then 'c[\''+block.iterVar+'\']=__'+block.safeIterVar+';' else '')+'b+=\'';
+        return '\'}'+(if block.statement == 'for' then 'c[\''+block.iterVar+'\']=__'+block.safeIterVar+';' else '')+'b+=\''
       fi
       console.warn('extra {/'+closeStatement+'} ignored')
       return ''
@@ -76,29 +76,32 @@ compile: (template){
   })
 
   # close extra fors and ifs
-  i: stack.length - 1
+  i = stack.length - 1
   while i > -1 do
-    block: stack[i--]
+    block = stack[i--]
     console.warn('extra {'+block.statement+'} closed at end of template')
-    template: template+'\'}b+=\''
+    template = template+'\'}b+=\''
   done
 
   # c is context, b is buffer
-  fn: new Function('g', 'r', 'return function(c){var b=\''+template+'\';return b}');
+  fn = new Function('g', 'r', 'return function(c){var b=\''+template+'\';return b}')
   return fn(render, (obj, key){
     # get value with dot notation, e.g. get(obj, 'key.for.something')
-    accessor: key.split('.'), empty: true
+    try
+      
+    accessor = key.split('.')
+    empty = true
     for i in accessor do
       # empty string for key.that.does.not.exist
       if !obj then return ''
-      obj: obj[accessor[i]]
+      obj = obj[accessor[i]]
     done
     # empty string for every falsy value except 0
-    if obj = undefined or obj = null or obj = false then return ''
+    if obj == undefined or obj == null or obj == false then return ''
     # treat [] and {} as falsy also
-    if obj instanceof Array and obj.length = 0 then return ''
-    if obj.constructor = Object then
-      for i in obj do if obj.hasOwnProperty(i) then empty: !i
+    if obj instanceof Array and obj.length == 0 then return ''
+    if obj.constructor == Object then
+      for i in obj do if obj.hasOwnProperty(i) then empty = !i
       if empty then return ''
     fi
     return obj
