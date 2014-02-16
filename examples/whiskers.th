@@ -88,7 +88,6 @@ compile = (template){
   return fn(render, (obj, key){
     # get value with dot notation, e.g. get(obj, 'key.for.something')
     accessor = key.split('.')
-    empty = true
     for i in accessor do
       # empty string for key.that.does.not.exist
       if !obj then return ''
@@ -99,6 +98,7 @@ compile = (template){
     # treat [] and {} as falsy also
     if obj instanceof Array and obj.length == 0 then return ''
     if obj.constructor == Object then
+      empty = true
       for i in obj do if obj.hasOwnProperty(i) then empty = !i
       if empty then return ''
     fi
