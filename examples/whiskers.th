@@ -87,8 +87,6 @@ compile = (template){
   fn = new Function('g', 'r', 'return function(c){var b=\''+template+'\';return b}')
   return fn(render, (obj, key){
     # get value with dot notation, e.g. get(obj, 'key.for.something')
-    try
-      
     accessor = key.split('.')
     empty = true
     for i in accessor do
