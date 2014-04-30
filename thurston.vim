@@ -6,7 +6,7 @@ syn match   thurstonComment         "#.*" contains=@Spell,thurstonCommentTodo
 syn keyword thurstonConditional     if then else fi
 syn keyword thurstonRepeat          for in while do done
 syn keyword thurstonBranch          break continue
-syn keyword thurstonOperator        new delete instanceof typeof
+syn keyword thurstonOperator        new delete instanceof typeof and in is not or
 syn region  thurstonStringD         start=+"+  skip=+\\\\\|\\"+  end=+"\|$+
 syn region  thurstonStringS         start=+'+  skip=+\\\\\|\\'+  end=+'\|$+
 syn region  thurstonRegexpString    start=+/[^/]*+me=e-1 skip=+\\\\\|\\/+ end=+/[gim]\{0,2\}\s*$+ end=+/[gim]\{0,2\}\s*[;.,)\]}]+me=e-1 oneline
