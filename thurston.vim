@@ -5,12 +5,12 @@ syn keyword thurstonCommentTodo     TODO FIXME XXX TBD contained
 syn match   thurstonComment         "#.*" contains=@Spell,thurstonCommentTodo
 syn keyword thurstonConditional     if then else fi
 syn keyword thurstonRepeat          for in while do done
-syn keyword thurstonBranch		      break continue
-syn keyword thurstonOperator		    new delete instanceof typeof
+syn keyword thurstonBranch          break continue
+syn keyword thurstonOperator        new delete instanceof typeof
 syn region  thurstonStringD         start=+"+  skip=+\\\\\|\\"+  end=+"\|$+
 syn region  thurstonStringS         start=+'+  skip=+\\\\\|\\'+  end=+'\|$+
 syn region  thurstonRegexpString    start=+/[^/]*+me=e-1 skip=+\\\\\|\\/+ end=+/[gim]\{0,2\}\s*$+ end=+/[gim]\{0,2\}\s*[;.,)\]}]+me=e-1 oneline
-syn keyword thurstonException	      try catch finally yrt throw
+syn keyword thurstonException       try catch finally yrt throw
 syn match   thurstonFunction        /(\_[^()]*){/he=e-1 contains=thurstonParams
 syn match   thurstonParams          /(\_[^()]*){/ms=s+1,me=e-2
 "syn region  thurstonFunctionBlock   matchgroup=thurstonFunctionBraces start="(\_[^()]*){"hs=e end="}" contains=ALL
