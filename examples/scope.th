@@ -1,24 +1,23 @@
-blam: 'pink'
+blam = 'pink'
 
-jin: {
-  bloop: 9
-  ^blam: 'black'
-  {^bloop: 12}() // IIFE
+jin = (){
+  blam = 'black'
+  bloop = 9
+  (){bloop = 12}() # IIFE
   return bloop
 }
 
-console.log(blam) // 'pink'
-console.log(jin.bloop) // 9
-console.log(jin()) // 12
+console.log(blam) # 'pink'
+console.log(jin()) # 12
+console.log(blam) # 'black'
 
-squiggle: (sss, cb) {
-  console.log(sss) // 'black'
-  consol.log(cb.x) // 13
-  console.log(cb()) // '13 is a carrot'
+squiggle = (sss, cb){
+  console.log(sss)
+  console.log(cb())
 }
 
-squiggle(blam, {
-  x: 13
-  n: 'a carrot'
+squiggle(blam, (x){
+  x = x or 13
+  n = 'a carrot'
   return x + ' is ' + n
-})
+}) # squiggle logs 'black' and '13 is a carrot'
