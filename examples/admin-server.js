@@ -1,0 +1,88 @@
+api = require('./api')
+fs = require('fs')
+hash = require('./lib/hash')
+http = require('http')
+hyperglue = require('hyperglue')
+send = require('send')
+url = require('url')
+zlib = require('zlib')
+
+// Timestamp logs
+require('logstamp')((){
+  return new Date().toISOString() + ' [admin.wavefarm.org] '
+})
+
+port = process.argv[2] || process.env.PORT || 1040
+
+decorate = (req, res){
+  res.lost = (){
+    console.warn('Warning: Not Found')
+    return require('./routes/404')(req, res)
+  }
+  res.error = (err){
+    console.error(err.stack)
+    return require('./routes/500')(req, res)
+  }
+  res.send = (out){
+    etag = hash(out)
+    if req.headers['if-none-match'] == etag {
+      res.writeHead(304)
+      return res.end()
+    }
+    res.writeHead(200, {'Content-Type': 'text/html', 'ETag': etag})
+    res.end(out)
+  }
+  res.glue = (template, data, cb){
+    fs.readFile(__dirname + '/templates/' + template, {encoding: 'utf8'}, (err, tmpl){
+      if err {return res.error(err)}
+      cb(hyperglue(tmpl, data).innerHTML)
+    })
+  }
+  res.render = (template, data){
+    res.glue(template, data, (inner){
+      data['#main'] = {_html: inner}
+      res.glue('layout.html', data, (out){
+        res.send(out)
+      })
+    })
+  }
+  res.layout = (){
+    res.statusCode = 200
+    res.setHeader('content-type', 'text/html')
+    res.setHeader('content-encoding', 'gzip')
+    return fs.createReadStream('templates/layout.html').pipe(zlib.Gzip()).pipe(res)
+  }
+}
+
+itemRe = /^\/(\w{6})$/
+
+http.createServer((req, res){
+  console.log(req.method, req.url)
+
+  send(req, req.url).root('static').on('error', (err){
+    decorate(req, res)
+
+    if err.status != 404 {
+      console.error(err.stack)
+      return res.error(err)
+    }
+
+    req.parsedUrl = url.parse(req.url)
+    p = req.parsedUrl.pathname
+
+    // Local proxy for api.wavefarm.org
+    if p.indexOf('/api') == 0 {return require('./routes/api')(req, res)}
+
+    // Serve the index for items, to be filled in by the client
+    if itemRe.test(p) {
+      req.itemId = itemRe.exec(p)[1]
+      return require('./routes/item')(req, res)
+    }
+
+    res.lost()
+  }).pipe(res)
+}).listen(port, (){
+  console.log('Listening on port', port)
+  if process.send {process.send('online')}
+})
+
