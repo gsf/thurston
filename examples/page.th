@@ -1,0 +1,410 @@
+(){
+
+  # Perform initial dispatch.
+  # 
+
+  dispatch: true
+
+  # Base path.
+  # 
+
+  base: ''
+
+  # Running flag.
+  # 
+
+  running: false
+
+  # Register `path` with callback `fn()`,
+  # or route `path`, or `page.start()`.
+  # 
+  #   page(fn)
+  #   page('*', fn)
+  #   page('/user/:id', load, user)
+  #   page('/user/' + user.id, { some: 'thing' })
+  #   page('/user/' + user.id)
+  #   page()
+  # 
+  # @param {String|Function} path
+  # @param {Function} fn...
+  # @api public
+  # 
+
+  page: (path, fn){
+    # <callback>
+    if '' = typeof path
+      return page('*', path)
+
+    # route <path> to <callback ...>
+    if '' = typeof fn
+      route: new Route(path)
+      for i: 1; i < arguments.length; ++i
+        page.callbacks.push(route.middleware(arguments[i]))
+    # show <path> with [state]
+    else if 'string' = typeof path
+      page.show(path, fn)
+    # start [options]
+    else
+      page.start(path)
+  }
+
+  # Callback s.
+  # 
+
+  page.callbacks: []
+
+  # Get or set basepath to `path`.
+  # 
+  # @param {String} path
+  # @api public
+  # 
+
+  page.base: (path){
+    if 0 = arguments.length then return base
+    base: path
+  }
+
+  # Bind with the given `options`.
+  # 
+  # Options:
+  # 
+  #    - `click` bind to click events [true]
+  #    - `popstate` bind to popstate [true]
+  #    - `dispatch` perform initial dispatch [true]
+  # 
+  # @param {Object} options
+  # @api public
+  # 
+
+  page.start: (options){
+    options: options or {}
+    if running then return
+    running: true
+    if false = options.dispatch then dispatch: false
+    if false != options.popstate then window.addEventListener('popstate', onpopstate, false)
+    if false != options.click) then window.addEventListener('click', onclick, false)
+    if !dispatch then return
+    url: location.pathname + location.search + location.hash
+    page.replace(url, null, true, dispatch)
+  }
+
+  # Unbind click and popstate event handlers.
+  # 
+  # @api public
+  # 
+
+  page.stop: (){
+    running: false
+    removeEventListener('click', onclick, false)
+    removeEventListener('popstate', onpopstate, false)
+  }
+
+  # Show `path` with optional `state` object.
+  # 
+  # @param {String} path
+  # @param {Object} state
+  # @param {Boolean} dispatch
+  # @return {Context}
+  # @api public
+  # 
+
+  page.show: (path, state, dispatch){
+    ctx: new Context(path, state)
+    if false != dispatch then page.dispatch(ctx)
+    if !ctx.unhandled then ctx.pushState()
+    return ctx
+  }
+
+  # Replace `path` with optional `state` object.
+  # 
+  # @param {String} path
+  # @param {Object} state
+  # @return {Context}
+  # @api public
+  # 
+
+  page.replace: (path, state, init, dispatch){
+    ctx: new Context(path, state)
+    ctx.init: init
+    if null = dispatch then dispatch: true
+    if dispatch then page.dispatch(ctx)
+    ctx.save()
+    return ctx
+  }
+
+  # Dispatch the given `ctx`.
+  # 
+  # @param {Object} ctx
+  # @api private
+  # 
+
+  page.dispatch: (ctx){
+    i: 0
+
+    next: (){
+      fn: page.callbacks[i++]
+      if !fn then return unhandled(ctx)
+      fn(ctx, next)
+    }
+
+    next()
+  }
+
+  # Unhandled `ctx`. When it's not the initial
+  # popstate then redirect. If you wish to handle
+  # 404s on your own use `page('*', callback)`.
+  # 
+  # @param {Context} ctx
+  # @api private
+  # 
+
+  unhandled: (ctx){
+    current: window.location.pathname + window.location.search
+    if current = ctx.canonicalPath then return
+    page.stop()
+    ctx.unhandled: true
+    window.location: ctx.canonicalPath
+  }
+
+  # Initialize a new "request" `Context`
+  # with the given `path` and optional initial `state`.
+  # 
+  # @param {String} path
+  # @param {Object} state
+  # @api public
+  # 
+
+  Context: (path, state){
+    if '/' = path[0] and 0 != path.indexOf(base) then path: base + path
+    i: path.indexOf('?')
+
+    this.canonicalPath: path
+    this.path: path.replace(base, '') or '/'
+
+    this.title: document.title
+    this.state: state or {}
+    this.state.path: path
+    this.querystring: if ~i then path.slice(i + 1) else ''
+    this.pathname: if ~i then path.slice(0, i) else path
+    this.params: []
+
+    # fragment
+    this.hash: ''
+    if !~this.path.indexOf('#') then return
+    parts: this.path.split('#')
+    this.path: parts[0]
+    this.hash: parts[1] or ''
+    this.querystring: this.querystring.split('#')[0]
+  }
+
+  # Expose `Context`.
+  # 
+
+  page.Context: Context
+
+  # Push state.
+  # 
+  # @api private
+  # 
+
+  Context.prototype.pushState: (){
+    history.pushState(this.state, this.title, this.canonicalPath)
+  }
+
+  # Save the context state.
+  # 
+  # @api public
+  # 
+
+  Context.prototype.save: (){
+    history.replaceState(this.state, this.title, this.canonicalPath)
+  }
+
+  # Initialize `Route` with the given HTTP `path`,
+  # and an array of `callbacks` and `options`.
+  # 
+  # Options:
+  # 
+  #   - `sensitive`    enable case-sensitive routes
+  #   - `strict`       enable strict matching for trailing slashes
+  # 
+  # @param {String} path
+  # @param {Object} options.
+  # @api private
+  # 
+
+  Route: (path, options){
+    options: options or {}
+    this.path: path
+    this.method: 'GET'
+    this.regexp: pathtoRegexp(path
+      , this.keys: []
+      , options.sensitive
+      , options.strict)
+  }
+
+  # Expose `Route`.
+  # 
+
+  page.Route: Route
+
+  # Return route middleware with
+  # the given callback `fn()`.
+  # 
+  # @param {Function} fn
+  # @return {Function}
+  # @api public
+  # 
+
+  Route.prototype.middleware: (fn){
+    self: this
+    return (ctx, next){
+      if self.match(ctx.path, ctx.params) then return fn(ctx, next)
+      next()
+    }
+  }
+
+  # Check if this route matches `path`, if so
+  # populate `params`.
+  # 
+  # @param {String} path
+  # @param {Array} params
+  # @return {Boolean}
+  # @api private
+  # 
+
+  Route.prototype.match: (path, params){
+    keys: this.keys
+      , qsIndex: path.indexOf('?')
+      , pathname: if ~qsIndex then path.slice(0, qsIndex) else path
+      , m: this.regexp.exec(decodeURIComponent(pathname))
+
+    if !m then return false
+
+    for i: 1, len: m.length; i < len; ++i
+      key: keys[i - 1]
+
+      val: if 'string' = typeof m[i]
+        decodeURIComponent(m[i]) else m[i]
+
+      if key
+        params[key.name]: if undefined != params[key.name]
+          params[key.name] else val
+      else
+        params.push(val)
+
+    return true
+  }
+
+  # Normalize the given path string,
+  # returning a regular expression.
+  # 
+  # An empty array should be passed,
+  # which will contain the placeholder
+  # key names. For example "/user/:id" will
+  # then contain ["id"].
+  # 
+  # @param  {String|RegExp|Array} path
+  # @param  {Array} keys
+  # @param  {Boolean} sensitive
+  # @param  {Boolean} strict
+  # @return {RegExp}
+  # @api private
+  # 
+
+  pathtoRegexp: (path, keys, sensitive, strict){
+    if path instanceof RegExp then return path
+    if path instanceof Array then path: '(' + path.join('|') + ')'
+    path: path
+      .concat(if strict then '' else '/?')
+      .replace(/\/\(/g, '(?:/')
+      .replace(/(\/)?(\.)?:(\w+)(?:(\(.*?\)))?(\?)?/g, (_, slash, format, key, capture, optional){
+        keys.push({name: key, optional: !!optional})
+        slash: slash or ''
+        return ''
+          + (if optional then '' else slash)
+          + '(?:'
+          + (if optional then slash else '')
+          + (format or '') + (capture or (format and '([^/.]+?)' or '([^/]+?)')) + ')'
+          + (optional or '')
+      })
+      .replace(/([\/.])/g, '\\$1')
+      .replace(/\*/g, '(.*)')
+    return new RegExp('^' + path + '$', if sensitive then '' else 'i')
+  }
+
+  # Handle "populate" events.
+  # 
+
+  onpopstate: (e){
+    if e.state
+      path: e.state.path
+      page.replace(path, e.state)
+  }
+
+  # Handle "click" events.
+  # 
+
+  onclick: (e){
+    if 1 != which(e) then return
+    if e.metaKey or e.ctrlKey or e.shiftKey then return
+    if e.defaultPrevented then return
+
+    # ensure link
+    el: e.target
+    while el and 'A' != el.nodeName do el: el.parentNode
+    if !el or 'A' != el.nodeName then return
+
+    # ensure non-hash for the same path
+    link: el.getAttribute('href')
+    if el.pathname = location.pathname and (el.hash or '#' = link) then return
+
+    # Check for mailto: in the href
+    if link.indexOf("mailto:") > -1 then return
+
+    # check target
+    if el.target then return
+
+    # x-origin
+    if !sameOrigin(el.href) then return
+
+    # rebuild path
+    path: el.pathname + el.search + (el.hash or '')
+
+    # same page
+    orig: path + el.hash
+
+    path: path.replace(base, '')
+    if base and orig = path then return
+
+    e.preventDefault()
+    page.show(orig)
+  }
+
+  # Event button.
+  # 
+
+  which: (e){
+    e: e or window.event
+    return if null = e.which
+      e.button else e.which
+  }
+
+  # Check if `href` is the same origin.
+  # 
+
+  sameOrigin: (href){
+    origin: location.protocol + '//' + location.hostname
+    if location.port then origin += ':' + location.port
+    return 0 = href.indexOf(origin)
+  }
+
+  # Expose `page`.
+  # 
+
+  if 'undefined' = typeof module
+    window.page: page
+  else
+    module.exports: page
+
+}()
