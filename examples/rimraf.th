@@ -1,43 +1,41 @@
-module.exports = rimraf
-rimraf.sync = rimrafSync
+module.exports: rimraf
+rimraf.sync: rimrafSync
 
-path = require("path")
-fs = require("fs")
+path: require("path")
+fs: require("fs")
 
 # for EMFILE handling
-timeout = 0
-exports.EMFILE_MAX = 1000
-exports.BUSYTRIES_MAX = 3
+timeout: 0
+exports.EMFILE_MAX: 1000
+exports.BUSYTRIES_MAX: 3
 
-isWindows = (process.platform == "win32")
+isWindows: process.platform = "win32"
 
-rimraf = (p, cb){
-  if !cb {throw new Error("No callback passed to rimraf()")}
+rimraf: (p, cb){
+  if !cb then throw new Error("No callback passed to rimraf()")
 
-  busyTries = 0
-  CB = (er){
-    if er {
-      if isWindows && (er.code == "EBUSY" || er.code == "ENOTEMPTY") &&
-          busyTries < exports.BUSYTRIES_MAX {
+  busyTries: 0
+  CB: (er){
+    if er
+      if isWindows and (er.code = "EBUSY" or er.code = "ENOTEMPTY") and
+          busyTries < exports.BUSYTRIES_MAX
         busyTries++
-        time = busyTries * 100
+        time: busyTries * 100
         # try again, with the same exact callback as this one.
         return setTimeout((){
           rimraf_(p, CB)
         }, time)
-      }
 
       # this one won't happen if graceful-fs is used.
-      if er.code == "EMFILE" && timeout < exports.EMFILE_MAX {
+      if er.code = "EMFILE" and timeout < exports.EMFILE_MAX
         return setTimeout((){
           rimraf_(p, CB)
         }, timeout++)
-      }
 
       # already gone
-      if er.code == "ENOENT" {er = null}
+      if er.code = "ENOENT" then er: null
 
-    timeout = 0
+    timeout: 0
     cb(er)
   }
 
@@ -55,80 +53,64 @@ rimraf = (p, cb){
 #
 # If anyone ever complains about this, then I guess the strategy could
 # be made configurable somehow.  But until then, YAGNI.
-rimraf_ = (p, cb){
+rimraf_: (p, cb){
   fs.unlink(p, (er){
-    if er {
-      if er.code == "ENOENT" {return cb(null)}
-      if er.code == "EPERM" {
-        return isWindows ? fixWinEPERM(p, er, cb) : rmdir(p, er, cb)
-      }
-      if er.code == "EISDIR" {return rmdir(p, er, cb)}
-    }
+    if er
+      if er.code = "ENOENT" then return cb(null)
+      if er.code = "EPERM"
+        if isWindows then fixWinEPERM(p, er, cb) else rmdir(p, er, cb)
+        return 
+      if er.code = "EISDIR" then return rmdir(p, er, cb)
     return cb(er)
   })
 }
 
-fixWinEPERM = (p, er, cb){
+fixWinEPERM: (p, er, cb){
   fs.chmod(p, 666, (er2){
-    if er2 {
-      cb(er2.code == "ENOENT" ? null : er)
-    } else {
+    if er2 then cb(if er2.code = "ENOENT" then null else er)
+    else 
       fs.stat(p, (er3, stats){
-        if er3 {
-          cb(if er3.code == "ENOENT" then null else er)
-        } else if stats.isDirectory() {
-          rmdir(p, er, cb)
-        } else {
-          fs.unlink(p, cb)
-        }
+        if er3 then cb(if er3.code = "ENOENT" then null else er)
+        else if stats.isDirectory() then rmdir(p, er, cb)
+        else fs.unlink(p, cb)
       })
-    }
   })
 }
 
-fixWinEPERMSync = (p, er, cb){
-  try {
-    fs.chmodSync(p, 666)
-  } catch {
-    if e.code !== "ENOENT" {throw e}
-  }
+fixWinEPERMSync: (p, er, cb){
+  try fs.chmodSync(p, 666)
+  catch if e.code != "ENOENT" then throw e
 
-  try {
-    stats = fs.statSync(p)
-  } catch {
-    if e !== "ENOENT" {throw e}
-  }
+  try stats: fs.statSync(p)
+  catch if e != "ENOENT" then throw e
 
-  if stats.isDirectory() {rmdirSync(p, er)}
-  else {fs.unlinkSync(p)}
+  if stats.isDirectory() then rmdirSync(p, er) else fs.unlinkSync(p)
 }
 
-rmdir = (p, originalEr, cb){
+rmdir: (p, originalEr, cb){
   # try to rmdir first, and only readdir on ENOTEMPTY or EEXIST (SunOS)
   # if we guessed wrong, and it's not a directory, then
   # raise the original error.
   fs.rmdir(p, (er){
-    if er && (er.code == "ENOTEMPTY" || er.code == "EEXIST" || er.code == "EPERM") {
+    if er and (er.code = "ENOTEMPTY" or er.code = "EEXIST" or er.code = "EPERM")
       rmkids(p, cb)
-    } else if er && er.code == "ENOTDIR" {
+    else if er and er.code = "ENOTDIR"
       cb(originalEr)
-    } else {
-      cb(er)
-    }
+    else cb(er)
   })
 }
 
-rmkids = (p, cb){
+rmkids: (p, cb){
   fs.readdir(p, (er, files){
-    if er {return cb(er)}
-    n = files.length
-    if n == 0 {return fs.rmdir(p, cb)}
-    errState = null
+    if er then return cb(er)
+    n: files.length
+    if n = 0 then return fs.rmdir(p, cb)
+    errState: null
     files.forEach((f){
       rimraf(path.join(p, f), (er){
-        if errState {return}
-        if er {return cb(errState = er)}
-        if --n == 0 {fs.rmdir(p, cb)}
+        if errState then return
+        if er then return cb(errState: er)
+        if --n = 0 then fs.rmdir(p, cb)
       })
     })
   })
@@ -137,34 +119,27 @@ rmkids = (p, cb){
 # this looks simpler, and is strictly *faster*, but will
 # tie up the JavaScript thread and fail on excessively
 # deep directory trees.
-rimrafSync = (p){
-  try {
-    fs.unlinkSync(p)
-  } catch {
-    if e.code == "ENOENT" {return}
-    if e.code == "EPERM" {
-      return isWindows ? fixWinEPERMSync(p, e) : rmdirSync(p, e)
-    }
-    if e.code !== "EISDIR" {throw e}
+rimrafSync: (p){
+  try fs.unlinkSync(p)
+  catch
+    if e.code = "ENOENT" then return
+    if e.code = "EPERM"
+      if isWindows then fixWinEPERMSync(p, e) else rmdirSync(p, e)
+      return
+    if e.code != "EISDIR" then throw e
     rmdirSync(p, e)
-  }
 }
 
-rmdirSync = (p, originalEr){
-  try {
-    fs.rmdirSync(p)
-  } catch {
-    if e.code == "ENOENT" {return}
-    if e.code == "ENOTDIR" {throw originalEr}
-    if e.code == "ENOTEMPTY" or e.code == "EEXIST" or e.code == "EPERM" {
+rmdirSync: (p, originalEr){
+  try fs.rmdirSync(p)
+  catch
+    if e.code = "ENOENT" then return
+    if e.code = "ENOTDIR" then throw originalEr
+    if e.code = "ENOTEMPTY" or e.code = "EEXIST" or e.code = "EPERM"
       rmkidsSync(p)
-    }
-  }
 }
 
-rmkidsSync = (p){
-  fs.readdirSync(p).forEach((f){
-    rimrafSync(path.join(p, f))
-  })
+rmkidsSync: (p){
+  fs.readdirSync(p).forEach((f){rimrafSync(path.join(p, f))})
   fs.rmdirSync(p)
 }
