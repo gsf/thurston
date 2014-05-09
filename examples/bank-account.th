@@ -1,16 +1,16 @@
-// Comparison to self, see
-// http://selflanguage.org/_static/tutorial/Language/ObjectsAndSlots/ExamplesOfSlots.html
+# Comparison to self, see
+# http://selflanguage.org/_static/tutorial/Language/ObjectsAndSlots/ExamplesOfSlots.html
 
 assert: require('assert')
 
 account: {
   balance: 100
-  deposit: amount {
-    balance: balance + amount
+  deposit: (amount){
+    .balance: .balance + amount
   }
-  withdraw: amount {
-    newBalance: balance - amount
-    balance: newBalance > 0 ? newBalance : 0
+  withdraw: (amount){
+    newBalance: .balance - amount
+    .balance: if newBalance > 0 then newBalance else 0
   }
 }
 
